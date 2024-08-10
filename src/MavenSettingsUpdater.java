@@ -218,14 +218,14 @@ public class MavenSettingsUpdater {
     }
 
     private static String executeScript(String scriptPath, String mavenPath, String javaPath, String masterPasswordFile) throws IOException {
-        // Create a temporary file for the password
-        Path tempPasswordFile = Files.createTempFile("masterPassword", ".txt");
-
-        // Write the master password to the temporary file
-        try (BufferedWriter writer = Files.newBufferedWriter(tempPasswordFile, StandardOpenOption.WRITE)) {
-            writer.write("dskfsdfnsdf");
-            writer.newLine(); // Ensure the password is followed by a newline
-        }
+//        // Create a temporary file for the password
+//        Path tempPasswordFile = Files.createTempFile("masterPassword", ".txt");
+//
+//        // Write the master password to the temporary file
+//        try (BufferedWriter writer = Files.newBufferedWriter(tempPasswordFile, StandardOpenOption.WRITE)) {
+//            writer.write("dskfsdfnsdf");
+//            writer.newLine(); // Ensure the password is followed by a newline
+//        }
 
         // Prepare the command to execute the batch script
         String batchScriptPath = "encrypt-password.bat"; // Update this path
@@ -237,6 +237,16 @@ public class MavenSettingsUpdater {
 
         // Start the process
         Process process = processBuilder.start();
+
+        // Write the password to the process
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
+            writer.write("dfhdkhdfg");
+            writer.newLine();  // Ensure the password is followed by a newline
+            writer.flush();
+        } catch (IOException e) {
+            System.err.println("Error writing to process: " + e.getMessage());
+            throw e;
+        }
 
         // Capture the process output
         StringBuilder output = new StringBuilder();
@@ -257,11 +267,11 @@ public class MavenSettingsUpdater {
         }
 
         // Delete the temporary file
-        Files.deleteIfExists(tempPasswordFile);
+//        Files.deleteIfExists(tempPasswordFile);
 
         // Process output to extract the password
         String result = output.toString().trim();
-        System.out.println("RESULT+++++"+result);
+        System.out.println("RESULT+++++" + result);
         if (result.startsWith("{") && result.endsWith("}")) {
             return result;
         } else {
