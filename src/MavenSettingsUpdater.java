@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class MavenSettingsUpdater {
 
-//    private static final String DEFAULT_MAVEN_PATH = "C:\\Program Files\\apache-maven-3.9.6\\bin\\mvn"; // Change as needed
+    //    private static final String DEFAULT_MAVEN_PATH = "C:\\Program Files\\apache-maven-3.9.6\\bin\\mvn"; // Change as needed
     private static final String DEFAULT_MAVEN_PATH = "C:\\Program Files\\apache-maven-3.9.6"; // Change as needed
     private static final String DEFAULT_JAVA_PATH = "C:\\Program Files\\Amazon Corretto\\jdk11.0.22_7"; // Change as needed
     private static final String SETTINGS_SECURITY_FILE = "settings-security.xml";
@@ -23,18 +23,18 @@ public class MavenSettingsUpdater {
             File settingsSecurityFile = new File(SETTINGS_SECURITY_FILE);
             File settingsFile = new File(SETTINGS_FILE);
 
-//            executeScript("encrypt-password.bat",mavenPath,javaPath,"my_secure_master_password.txt");
-            if (!settingsSecurityFile.exists()) {
-                generateSettingsSecurityFile(mavenPath, javaPath);
-            } else {
-                updateSettingsSecurityFile(mavenPath, javaPath);
-            }
-
-            if (!settingsFile.exists()) {
-                generateSettingsFile();
-            } else {
-                updateSettingsFile(mavenPath, javaPath);
-            }
+            executeScript("encrypt-password.bat", mavenPath, javaPath, "my_secure_master_password.txt");
+//            if (!settingsSecurityFile.exists()) {
+//                generateSettingsSecurityFile(mavenPath, javaPath);
+//            } else {
+//                updateSettingsSecurityFile(mavenPath, javaPath);
+//            }
+//
+//            if (!settingsFile.exists()) {
+//                generateSettingsFile();
+//            } else {
+//                updateSettingsFile(mavenPath, javaPath);
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -217,42 +217,55 @@ public class MavenSettingsUpdater {
         }
     }
 
-    private static void executeScript(String scriptPath, String mavenPath, String javaPath, String masterPasswordFile) throws IOException {
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                scriptPath,
-                mavenPath,
-                javaPath,
-                masterPasswordFile
-        );
-        processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
+    private static String executeScript(String scriptPath, String mavenPath, String javaPath, String masterPasswordFile) throws IOException {
+        // Create a temporary file for the password
+        Path tempPasswordFile = Files.createTempFile("masterPassword", ".txt");
 
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
-            // Send the master password to the process
-            writer.write("sfsdfsddsf");
-            writer.newLine();
-            writer.flush();
-        } catch (IOException e) {
-            System.err.println("Error writing to process: " + e.getMessage());
-            throw e;
+        // Write the master password to the temporary file
+        try (BufferedWriter writer = Files.newBufferedWriter(tempPasswordFile, StandardOpenOption.WRITE)) {
+            writer.write("dskfsdfnsdf");
+            writer.newLine(); // Ensure the password is followed by a newline
         }
 
-        // Read the encrypted password from the process
+        // Prepare the command to execute the batch script
+        String batchScriptPath = "encrypt-password.bat"; // Update this path
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                "cmd.exe", "/c", batchScriptPath, "\"" + mavenPath + "\"", "\"" + javaPath + "\""
+
+        );
+        processBuilder.redirectErrorStream(true);
+
+        // Start the process
+        Process process = processBuilder.start();
+
+        // Capture the process output
+        StringBuilder output = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                output.append(line).append(System.lineSeparator());
             }
-        } catch (IOException e) {
-            System.err.println("Error reading from process: " + e.getMessage());
-            throw e;
         }
 
+        // Ensure the process has completed
         try {
             process.waitFor();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Restore interrupted status
             System.err.println("Process interrupted: " + e.getMessage());
+            throw new IOException("Process was interrupted", e);
+        }
+
+        // Delete the temporary file
+        Files.deleteIfExists(tempPasswordFile);
+
+        // Process output to extract the password
+        String result = output.toString().trim();
+        System.out.println("RESULT+++++"+result);
+        if (result.startsWith("{") && result.endsWith("}")) {
+            return result;
+        } else {
+            throw new IOException("Unexpected format of encrypted password: " + result);
         }
     }
 }
