@@ -5,12 +5,12 @@
         <server>
             <id>repoid1</id>
             <username>ldap_user_name</username>
-            <password>The syntax of the command is incorrect.</password>
+            <password>test2</password>
         </server>
         <server>
             <id>repoid2</id>
             <username>ldap_user_name</username>
-            <password>The syntax of the command is incorrect.</password>
+            <password>test2</password>
         </server>
     </servers>
 </settings>

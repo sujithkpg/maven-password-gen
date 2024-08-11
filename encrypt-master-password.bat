@@ -15,6 +15,6 @@ set "MAVEN_PATH=%~1"
 set "JAVA_PATH=%~2"
 
 :: Ensure paths are quoted to handle spaces
-"%MAVEN_PATH%\bin\mvn.cmd" --encrypt-password -Dmaven.compiler.executable="%JAVA_PATH%\bin\javac.exe"
+"%MAVEN_PATH%\bin\mvn.cmd" --encrypt-master-password -Dmaven.compiler.executable="%JAVA_PATH%\bin\javac.exe"
 
 endlocal
